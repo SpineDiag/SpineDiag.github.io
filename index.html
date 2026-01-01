@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpineDiag — Multimodal Clinical Dataset & Benchmark for Radiation-Free Scoliosis Assessment</title>
+<meta name="description" content="SpineDiag: a per-subject multimodal-paired clinical AIS dataset pairing radiation-free surface modalities with X-ray-derived Cobb angle and physician-confirmed diagnosis.">
+<style>
+  :root{
+    --bg:#f6f8fa; --panel:#ffffff; --ink:#16232e; --muted:#5b6b78;
+    --line:#e5ebf0; --brand:#0e7c86; --brand-2:#0b5e9c; --accent:#e8f5f6;
+    --spine:#e4572e; --shoulder:#2d7dd2; --scapula:#17a398; --waist:#f3a712;
+    --shadow:0 1px 2px rgba(16,35,46,.06),0 8px 24px rgba(16,35,46,.06);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--brand-2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 22px}
+  code,pre{font-family:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+
+  /* Hero */
+  header.hero{background:
+      radial-gradient(1200px 400px at 80% -10%,rgba(14,124,134,.14),transparent 60%),
+      linear-gradient(180deg,#ffffff, #f2f7f8);
+    border-bottom:1px solid var(--line)}
+  .hero-inner{padding:54px 0 40px}
+  .eyebrow{display:inline-block;font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--brand);font-weight:700;background:var(--accent);padding:5px 11px;border-radius:999px}
+  h1{font-size:clamp(28px,4.4vw,44px);line-height:1.12;margin:16px 0 8px;letter-spacing:-.02em}
+  .sub{font-size:clamp(15px,2vw,18px);color:var(--muted);max-width:760px;margin:0}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;
+    font-weight:600;font-size:14.5px;border:1px solid var(--line);background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .btn.primary:hover{background:#0a6a73;text-decoration:none}
+  .btn:hover{text-decoration:none;transform:translateY(-1px)}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+  .badge{font-size:13px;color:var(--ink);background:#fff;border:1px solid var(--line);
+    padding:7px 12px;border-radius:999px;box-shadow:var(--shadow)}
+  .badge b{color:var(--brand)}
+
+  section{padding:44px 0}
+  section h2{font-size:clamp(22px,3vw,29px);letter-spacing:-.01em;margin:0 0 6px}
+  .lead{color:var(--muted);max-width:800px;margin:0 0 26px}
+  .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);font-weight:700;margin-bottom:8px}
+
+  /* Stat cards */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px;box-shadow:var(--shadow)}
+  .stat .n{font-size:30px;font-weight:750;letter-spacing:-.02em;color:var(--brand)}
+  .stat .l{font-size:13.5px;color:var(--muted);margin-top:2px}
+
+  .grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:start}
+  @media(max-width:820px){.grid2{grid-template-columns:1fr}}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:22px;align-items:start}
+  .srcnote{font-size:12.5px;color:var(--muted);margin:10px 12px 4px;line-height:1.5}
+  .flag{background:#fff8ec;border:1px solid #f4e2bf;border-radius:12px;padding:14px 16px;font-size:13.5px;color:#7a5a12;margin-top:18px}
+  .flag b{color:#5f4508}
+  .flag ol{margin:8px 0 0;padding-left:20px}
+.matrix{max-height:520px;overflow:auto;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.mx{width:100%;border-collapse:collapse;font-size:13px}
+.mx thead th{position:sticky;top:0;background:#f7f9fa;z-index:1;border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;font-weight:600;white-space:nowrap}
+.mx td{padding:6px 10px;border-bottom:1px solid #eef1f2}
+.mx tbody tr:nth-child(even){background:#fbfcfc}
+.mx .sid{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.mx .ck{text-align:center;width:76px}
+.mx td.ck{color:#2f7d8a;font-weight:600}
+.mx .tx{text-align:left;white-space:nowrap}
+.mx td.tx{color:#43535a}
+  .flag li{margin:6px 0}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .card .hd{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:700;font-size:15px;display:flex;align-items:center;gap:9px;background:#fbfdfd}
+  .card .bd{padding:16px 18px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+  tbody tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .barcell{position:relative}
+  .bar{height:8px;border-radius:5px;background:var(--brand);opacity:.85}
+  .tagrow td{border-top:2px solid var(--line);font-weight:700}
+
+  /* Protocol / skeleton */
+  .proto{display:grid;grid-template-columns:340px 1fr;gap:26px;align-items:start}
+  @media(max-width:820px){.proto{grid-template-columns:1fr}}
+  .protofig{margin:0;background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:16px 18px}
+  @media(max-width:640px){.protofig{padding:10px}}
+  .legend{display:grid;gap:12px}
+  .lg{display:flex;gap:11px;align-items:flex-start}
+  .lg .sw{margin-top:5px;flex:0 0 auto}
+  .lg b{font-size:14.5px}
+  .lg span{color:var(--muted);font-size:13.5px}
+
+  /* Example tabs */
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .tab{padding:9px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;font-weight:600;font-size:13.5px;cursor:pointer;box-shadow:var(--shadow)}
+  .tab[aria-selected="true"]{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .example{display:none}
+  .example.active{display:block}
+  .io{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+  @media(max-width:820px){.io{grid-template-columns:1fr}}
+  .io .panel-label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:0 0 8px}
+  .prompt{background:#0f2b31;color:#d7ecee;border-radius:12px;padding:14px 16px;font-size:13.5px;line-height:1.5}
+  .prompt .qk{color:#7fd0d8;font-weight:700}
+  details.cot{margin-top:12px;border:1px solid var(--line);border-radius:10px;background:#fbfdfd}
+  details.cot summary{cursor:pointer;padding:11px 14px;font-weight:600;font-size:13.5px;color:var(--brand-2)}
+  details.cot .cotbody{padding:0 14px 12px;color:var(--muted);font-size:13px;white-space:pre-wrap}
+  .dx{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){.dx{grid-template-columns:1fr}}
+  .dxi{border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:#fff}
+  .dxi .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--brand);font-weight:700}
+  .dxi .v{font-size:14px;margin-top:2px}
+  pre.json{background:#0f2b31;color:#e6f2f3;border-radius:12px;padding:14px 16px;overflow:auto;font-size:12.5px;line-height:1.5;margin:0}
+  pre.json .jk{color:#7fd0d8}.pre .jn{color:#f3a712}
+  img.eximg{width:100%;border-radius:12px;border:1px solid var(--line);box-shadow:var(--shadow);display:block}
+  table.mx{display:block;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+  .io>*{min-width:0}
+  pre.json{max-width:100%}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+  @media(max-width:720px){.duo{grid-template-columns:1fr}}
+  .capt{font-size:11.5px;color:var(--muted);margin-top:6px}
+  .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+  @media(max-width:720px){.gallery{grid-template-columns:1fr}}
+  .gcard{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  .gcard img{width:100%;display:block}
+  .gcard .cap{padding:11px 13px;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .gcard .cap b{color:var(--ink)}
+
+  /* Ethics */
+  .ethgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+  .eth{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+  .eth h4{margin:0 0 6px;font-size:15px;display:flex;align-items:center;gap:8px}
+  .eth p{margin:0;color:var(--muted);font-size:13.5px}
+  .note{background:#fff8ec;border:1px solid #f4e2bf;border-radius:12px;padding:13px 16px;font-size:13.5px;color:#7a5a12;margin-top:16px}
+  .note b{color:#8a5a00}
+
+  footer{border-top:1px solid var(--line);background:#fff;padding:30px 0;margin-top:20px}
+  footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;color:var(--muted);font-size:13.5px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap hero-inner">
+    <span class="eyebrow">NeurIPS 2026 · Datasets &amp; Benchmarks</span>
+    <h1>SpineDiag: Multimodal Clinical Dataset &amp; Evaluation<br>for Radiation-Free Scoliosis Assessment</h1>
+    <p class="sub">The first per-subject multimodal-paired clinical dataset for Adolescent Idiopathic Scoliosis (AIS) — pairing radiation-free surface modalities (RGB, multi-view video, depth, point cloud, 24-point keypoints) with the X-ray-derived clinical Cobb angle and a six-dimensional physician-confirmed diagnosis.</p>
+    <div class="btns">
+      <a class="btn primary" href="#dataset">Explore the dataset</a>
+      <a class="btn" href="https://github.com/SpineDiag/SpineDiag.github.io" target="_blank" rel="noopener">◧ Project repo</a>
+      <a class="btn" href="#examples">Benchmark examples</a>
+      <a class="btn" href="#ethics">De-identification &amp; ethics</a>
+      <a class="btn" href="#stats">Source statistics</a>
+    </div>
+    <div class="badges">
+      <span class="badge"><b>133</b> subjects</span>
+      <span class="badge"><b>5</b> paired surface modalities</span>
+      <span class="badge"><b>24</b>-point anatomical protocol</span>
+      <span class="badge"><b>X-ray</b>-derived Cobb GT</span>
+      <span class="badge"><b>3</b>-benchmark suite</span>
+    </div>
+  </div>
+</header>
+
+<!-- DATASET COMPOSITION -->
+<section id="dataset">
+  <div class="wrap">
+    <div class="kicker">Dataset composition</div>
+    <h2>Per-subject statistics &amp; modality availability</h2>
+    <p class="lead">Every enrolled subject is one unique patient with one physician-confirmed diagnosis and one clinically-measured Cobb angle. Surface modalities are captured at a fixed standoff distance; the counts below make the per-modality subsets fully transparent — <b>“annotated frames” (888) are distinct from “subjects” (133)</b>.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="n">133</div><div class="l">Unique subjects</div></div>
+      <div class="stat"><div class="n">888</div><div class="l">Keypoint-annotated frames</div></div>
+      <div class="stat"><div class="n">711</div><div class="l">Depth-bearing frames</div></div>
+      <div class="stat"><div class="n">71<span style="font-size:16px;color:var(--muted)">/133</span></div><div class="l">Archived standing PA X-ray</div></div>
+      <div class="stat"><div class="n">8–16</div><div class="l">Age range (years)</div></div>
+    </div>
+
+    <div class="grid2" style="margin-top:22px">
+      <div class="card">
+        <div class="hd">Modality availability (per subject / per frame)</div>
+        <div class="bd" style="padding:6px 4px">
+          <table>
+            <thead><tr><th>Modality</th><th>Ground-truth / role</th><th class="num">Count</th></tr></thead>
+            <tbody>
+              <tr><td>RGB stills (posterior · lateral · forward-bend)</td><td>surface input</td><td class="num">133 subj</td></tr>
+              <tr><td>24-point 2D keypoints</td><td>B1 target</td><td class="num">888 frames</td></tr>
+              <tr><td>Depth + point cloud (synchronized)</td><td>B3 / 3D-kpt input</td><td class="num">711 frames</td></tr>
+              <tr><td>Multi-view dynamic video (30 fps)</td><td>surface input</td><td class="num">62 subj</td></tr>
+              <tr><td>Six-dimensional diagnosis text</td><td>B2 / B3 target</td><td class="num">133 subj</td></tr>
+              <tr><td>Clinical Cobb angle (radiology report)</td><td>ground truth</td><td class="num">133 subj</td></tr>
+              <tr><td>Standing PA X-ray image (archived)</td><td>supplementary</td><td class="num">71 subj</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="display:grid;gap:22px">
+        <div class="card">
+          <div class="hd">Primary-curve Cobb severity (n = 133)</div>
+          <div class="bd" style="padding:6px 4px">
+            <table>
+              <thead><tr><th>Stratum</th><th>Cobb</th><th class="num">Subjects</th></tr></thead>
+              <tbody>
+                <tr><td>Very mild</td><td>&lt; 10°</td><td class="num">29</td></tr>
+                <tr><td>Mild</td><td>10–20°</td><td class="num">35</td></tr>
+                <tr><td>Moderate</td><td>20–40°</td><td class="num">35</td></tr>
+                <tr><td>Severe</td><td>&gt; 40°</td><td class="num">34</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="hd">Symptom presence (n = 133)</div>
+          <div class="bd" style="padding:6px 4px">
+            <table>
+              <tbody>
+                <tr><td>Symptomatic AIS <span style="color:var(--muted)">(visible asymmetry / razor back)</span></td><td class="num">106</td></tr>
+                <tr><td>Asymptomatic referral <span style="color:var(--muted)">(school-screening positives)</span></td><td class="num">27</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+        <div class="card" style="margin-top:26px">
+      <div class="hd"><span class="dot" style="background:#6b5ea8"></span>Per-subject modality matrix <span id="mx-count" style="font-weight:400;color:var(--muted);font-size:12.5px">&nbsp;· 133 subjects</span></div>
+      <div class="bd" style="padding:0">
+        <div class="matrix">
+          <table class="mx">
+            <thead><tr id="mx-head"><th>subject</th><th class="ck">RGB image</th><th class="ck">RGB video</th><th class="ck">Depth image</th><th class="ck">Depth video</th><th class="ck">X-ray</th><th class="ck">CT</th><th class="ck">Diagnosis</th><th class="tx">Data source</th><th class="tx">Severity of scoliosis</th></tr></thead>
+<tbody id="mx-body">
+<tr><td class="sid">S001</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S002</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S003</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S004</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S005</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S006</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S007</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S008</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S009</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S010</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S011</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S012</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S013</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S014</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S015</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S016</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S017</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S018</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S019</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S020</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S021</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S022</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S023</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S024</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S025</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S026</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S027</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S028</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S029</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S030</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S031</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S032</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S033</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S034</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S035</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S036</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S037</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S038</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S039</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S040</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S041</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S042</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S043</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S044</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S045</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S046</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S047</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S048</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S049</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S050</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S051</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S052</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S053</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S054</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S055</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S056</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S057</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S058</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S059</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S060</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S061</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S062</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Free clinic</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S063</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S064</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S065</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S066</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S067</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S068</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S069</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S070</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S071</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S072</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S073</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S074</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S075</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S076</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S077</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S078</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S079</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S080</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S081</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S082</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S083</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S084</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S085</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S086</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S087</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S088</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S089</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S090</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S091</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S092</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S093</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S094</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S095</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S096</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S097</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S098</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S099</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S100</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S101</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S102</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S103</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S104</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S105</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S106</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S107</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S108</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S109</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S110</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S111</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S112</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S113</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S114</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S115</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S116</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S117</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S118</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S119</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S120</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S121</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S122</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S123</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S124</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">Very mild</td></tr>
+<tr><td class="sid">S125</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S126</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S127</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S128</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">severe</td></tr>
+<tr><td class="sid">S129</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S130</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">moderate</td></tr>
+<tr><td class="sid">S131</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S132</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+<tr><td class="sid">S133</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">·</td><td class="ck">·</td><td class="ck">✓</td><td class="ck">·</td><td class="ck">✓</td><td class="tx">Hospital</td><td class="tx">mild</td></tr>
+</tbody>
+          </table>
+        </div>
+        <p class="srcnote">✓ = present, · = absent; the two right-hand columns hold categorical values and are reproduced verbatim. This table is read directly from <code>assets/summary.xlsx</code> in the browser at page load, so it always reflects the current workbook. The released workbook carries no patient-identifying field: its first column is an internal record identifier which the page never renders, and the subject label <code>S001</code>&ndash;<code>S133</code> shown here is re-derived from row position. Every other cell is reproduced as it stands in the sheet.</p>
+        <p class="srcnote" id="mx-status" style="margin-top:0">Reading <code>assets/summary.xlsx</code>&hellip;</p>
+        <p class="srcnote" id="mx-local" style="margin-top:6px;display:none">Preview a workbook from this computer instead: <input type="file" id="mx-file" accept=".xlsx" style="font:inherit;font-size:12px"> <span style="color:var(--muted)">&mdash; parsed in your browser, nothing is uploaded.</span></p>
+      </div>
+    </div>
+    <div class="note">Numbers follow the released split (paper Table&nbsp;1) and the 133-subject benchmark cohort. Continued multi-centre enrolment is ongoing.</div>
+  </div>
+</section>
+
+<!-- KEYPOINT PROTOCOL -->
+<section id="protocol" style="background:linear-gradient(180deg,#fff,#f3f7f8);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="kicker">Annotation Protocol</div>
+    <h2>The 24-point anatomical keypoint protocol</h2>
+    <p class="lead">Twelve spinal landmarks (cranial reference + T1–T7 + L1–L4) anchored to palpable reference lines, plus bilateral shoulder, scapular, and waist points. Anchoring to externally palpable anatomy (rather than imaged vertebrae) makes the protocol reproducible without X-ray. The figure below is the released protocol specification, showing every landmark against the palpable reference line it is anchored to — <b>no subject photograph is shown</b>.</p>
+    <figure class="protofig">
+<svg id="kp-protocol-fig" viewBox="0 0 503.28 279.36" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="SpineDiag 24-point keypoint protocol: 12 spine, 4 shoulder, 2 scapula and 6 waist landmarks on a posterior view, with the anatomical reference lines they are anchored to" style="display:block;width:100%;height:auto" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <style type="text/css">#kp-protocol-fig *{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="kp-figure_1">
+  <g id="kp-patch_1">
+   <path d="M 0 279.36 
+L 503.28 279.36 
+L 503.28 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="kp-axes_1">
+   <g id="kp-patch_2">
+    <path d="M 7.2 258.024227 
+L 211.154944 258.024227 
+L 211.154944 21.335773 
+L 7.2 21.335773 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="kp-patch_3">
+    <path d="M 52.523321 252.988302 
+L 54.034098 240.398491 
+L 67.127502 202.629057 
+L 69.141872 172.413509 
+L 57.055653 144.715925 
+L 44.969434 124.572226 
+L 46.983804 101.910566 
+L 72.667019 84.28483 
+L 85.25683 73.205796 
+L 91.29994 58.098023 
+L 100.364604 51.551321 
+L 109.429268 58.098023 
+L 115.472378 73.205796 
+L 128.062189 84.28483 
+L 153.745404 101.910566 
+L 155.759774 124.572226 
+L 143.673555 144.715925 
+L 131.587336 172.413509 
+L 133.601706 202.629057 
+L 146.69511 240.398491 
+L 148.205887 252.988302 
+z
+" clip-path="url(#kp-p9b76541a89)" style="fill: #f4f1ed"/>
+   </g>
+   <g id="kp-matplotlib.axis_1"/>
+   <g id="kp-matplotlib.axis_2"/>
+   <g id="kp-line2d_1">
+    <path d="M 52.523321 252.988302 
+L 54.034098 240.398491 
+L 67.127502 202.629057 
+L 69.141872 172.413509 
+L 57.055653 144.715925 
+L 44.969434 124.572226 
+L 46.983804 101.910566 
+L 72.667019 84.28483 
+L 85.25683 73.205796 
+L 91.29994 58.098023 
+L 100.364604 51.551321 
+L 109.429268 58.098023 
+L 115.472378 73.205796 
+L 128.062189 84.28483 
+L 153.745404 101.910566 
+L 155.759774 124.572226 
+L 143.673555 144.715925 
+L 131.587336 172.413509 
+L 133.601706 202.629057 
+L 146.69511 240.398491 
+L 148.205887 252.988302 
+L 52.523321 252.988302 
+" clip-path="url(#kp-p9b76541a89)" style="fill: none; stroke: #6b6b6b; stroke-width: 0.7; stroke-linecap: square"/>
+   </g>
+   <g id="kp-line2d_2">
+    <path d="M 33.8904 190.039245 
+L 35.90477 190.039245 
+" clip-path="url(#kp-p9b76541a89)" style="fill: none; stroke: #d8a0b4; stroke-width: 0.9; stroke-linecap: square"/>
+   </g>
+   <g id="kp-line2d_3">
+    <path d="M 33.8904 232.844604 
+L 35.90477 232.844604 
+" clip-path="url(#kp-p9b76541a89)" style="fill: none; stroke: #d8a0b4; stroke-width: 0.9; stroke-linecap: square"/>
+   </g>
+   <g id="kp-line2d_4">
+    <path d="M 42.451472 99.392604 
+L 158.277736 99.392604 
+" clip-path="url(#kp-p9b76541a89)" style="fill: none; stroke-dasharray: 2.1,1.4; stroke-dashoffset: 0; stroke: #7e9f6a; stroke-opacity: 0.85; stroke-width: 0.7"/>
+   </g>
+   <g id="kp-text_1">
+    <text style="fill: #7e9f6a; font: 700 6.4px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="160.795698" y="101.051604" transform="rotate(-0 160.795698 101.051604)">T2/T3</text>
+   </g>
+   <g id="kp-text_2">
+    <text style="fill: #7a8e68; font: italic 5.4px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="160.795698" y="109.804524" transform="rotate(-0 160.795698 109.804524)">shoulder superior</text>
+   </g>
+   <g id="kp-line2d_5">
+    <path d="M 42.451472 152.269811 
+L 158.277736 152.269811 
+" clip-path="url(#kp-p9b76541a89)" style="fill: none; stroke-dasharray: 2.1,1.4; stroke-dashoffset: 0; stroke: #7e9f6a; stroke-opacity: 0.85; stroke-width: 0.7"/>
+   </g>
+   <g id="kp-text_3">
+    <text style="fill: #7e9f6a; font: 700 6.4px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="160.795698" y="153.928811" transform="rotate(-0 160.795698 153.928811)">T7</text>
+   </g>
+   <g id="kp-text_4">
+    <text style="fill: #7a8e68; font: italic 5.4px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="160.795698" y="162.681732" transform="rotate(-0 160.795698 162.681732)">shoulder inferior</text>
+   </g>
+   <g id="kp-line2d_6">
+    <path d="M 42.451472 177.449434 
+L 158.277736 177.449434 
+" clip-path="url(#kp-p9b76541a89)" style="fill: none; stroke-dasharray: 2.1,1.4; stroke-dashoffset: 0; stroke: #7e9f6a; stroke-opacity: 0.85; stroke-width: 0.7"/>
+   </g>
+   <g id="kp-text_5">
+    <text style="fill: #7e9f6a; font: 700 6.4px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="160.795698" y="179.108434" transform="rotate(-0 160.795698 179.108434)">L2</text>
+   </g>
+   <g id="kp-text_6">
+    <text style="fill: #7a8e68; font: italic 5.4px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="160.795698" y="187.861355" transform="rotate(-0 160.795698 187.861355)">costal arch</text>
+   </g>
+   <g id="kp-line2d_7">
+    <path d="M 42.451472 220.254793 
+L 158.277736 220.254793 
+" clip-path="url(#kp-p9b76541a89)" style="fill: none; stroke-dasharray: 2.1,1.4; stroke-dashoffset: 0; stroke: #7e9f6a; stroke-opacity: 0.85; stroke-width: 0.7"/>
+   </g>
+   <g id="kp-text_7">
+    <text style="fill: #7e9f6a; font: 700 6.4px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="160.795698" y="221.913793" transform="rotate(-0 160.795698 221.913793)">L4</text>
+   </g>
+   <g id="kp-text_8">
+    <text style="fill: #7a8e68; font: italic 5.4px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="160.795698" y="230.666713" transform="rotate(-0 160.795698 230.666713)">iliac crest</text>
+   </g>
+   <g id="kp-line2d_8">
+    <path d="M 44.969434 190.039245 
+L 155.759774 190.039245 
+" clip-path="url(#kp-p9b76541a89)" style="fill: none; stroke: #d8a0b4; stroke-opacity: 0.85; stroke-linecap: square"/>
+   </g>
+   <g id="kp-line2d_9">
+    <path d="M 44.969434 232.844604 
+L 155.759774 232.844604 
+" clip-path="url(#kp-p9b76541a89)" style="fill: none; stroke: #d8a0b4; stroke-opacity: 0.85; stroke-linecap: square"/>
+   </g>
+   <g id="kp-patch_4">
+    <path d="M 33.8904 230.845941 
+Q 33.8904 211.441341 33.8904 192.036741 
+" style="fill: none; stroke: #d8a0b4; stroke-width: 0.9; stroke-linecap: round"/>
+   </g>
+   <g id="kp-text_9">
+    <text style="fill: #d8a0b4; font: 700 5.8px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(12.539374 210.401119)">lumbar</text>
+    <text style="fill: #d8a0b4; font: 700 5.8px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(21.565624 215.489668)">belt</text>
+   </g>
+   <g id="kp-line2d_10">
+    <path d="M 100.364604 81.766868 
+L 100.364604 222.772755 
+" clip-path="url(#kp-p9b76541a89)" style="fill: none; stroke: #d7b5b5; stroke-opacity: 0.5; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="kp-patch_5">
+    <path d="M 61.557703 74.77769 
+Q 80.930154 74.628585 98.5828 83.376851 
+" style="fill: none; stroke: #999999; stroke-width: 0.4; stroke-linecap: round"/>
+   </g>
+   <g id="kp-text_10">
+    <text style="fill: #1f2937; font: 700 6.4px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: end" x="57.559245" y="76.879166" transform="rotate(-0 57.559245 76.879166)">C7</text>
+   </g>
+   <g id="kp-text_11">
+    <text style="fill: #1f2937; font: 700 7.2px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: middle" x="100.364604" y="29.892247" transform="rotate(-0 100.364604 29.892247)">SpineDiag 24-point keypoint protocol</text>
+   </g>
+   <g id="kp-text_12">
+    <text style="fill: #6b7280; font: italic 5.8px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: middle" x="100.364604" y="42.776715" transform="rotate(-0 100.364604 42.776715)">posterior view, anatomically anchored</text>
+   </g>
+   <g id="kp-PathCollection_1">
+    <defs>
+     <path id="kp-m8e8bdabd05" d="M 0 1.870829 
+C 0.49615 1.870829 0.972045 1.673706 1.322876 1.322876 
+C 1.673706 0.972045 1.870829 0.49615 1.870829 0 
+C 1.870829 -0.49615 1.673706 -0.972045 1.322876 -1.322876 
+C 0.972045 -1.673706 0.49615 -1.870829 0 -1.870829 
+C -0.49615 -1.870829 -0.972045 -1.673706 -1.322876 -1.322876 
+C -1.673706 -0.972045 -1.870829 -0.49615 -1.870829 0 
+C -1.870829 0.49615 -1.673706 0.972045 -1.322876 1.322876 
+C -0.972045 1.673706 -0.49615 1.870829 0 1.870829 
+z
+" style="stroke: #ffffff; stroke-width: 0.4"/>
+    </defs>
+    <g clip-path="url(#kp-p9b76541a89)">
+     <use xlink:href="#kp-m8e8bdabd05" x="100.364604" y="84.28483" style="fill: #c66b6b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m8e8bdabd05" x="100.364604" y="99.392604" style="fill: #c66b6b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m8e8bdabd05" x="100.364604" y="108.205472" style="fill: #c66b6b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m8e8bdabd05" x="100.364604" y="117.01834" style="fill: #c66b6b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m8e8bdabd05" x="100.364604" y="125.831208" style="fill: #c66b6b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m8e8bdabd05" x="100.364604" y="134.644075" style="fill: #c66b6b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m8e8bdabd05" x="100.364604" y="143.456943" style="fill: #c66b6b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m8e8bdabd05" x="100.364604" y="152.269811" style="fill: #c66b6b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m8e8bdabd05" x="100.364604" y="179.967396" style="fill: #c66b6b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m8e8bdabd05" x="100.364604" y="193.396528" style="fill: #c66b6b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m8e8bdabd05" x="100.364604" y="206.82566" style="fill: #c66b6b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m8e8bdabd05" x="100.364604" y="220.254793" style="fill: #c66b6b; stroke: #ffffff; stroke-width: 0.4"/>
+    </g>
+   </g>
+   <g id="kp-PathCollection_2">
+    <defs>
+     <path id="kp-mec15ebe9c1" d="M 0 1.870829 
+C 0.49615 1.870829 0.972045 1.673706 1.322876 1.322876 
+C 1.673706 0.972045 1.870829 0.49615 1.870829 0 
+C 1.870829 -0.49615 1.673706 -0.972045 1.322876 -1.322876 
+C 0.972045 -1.673706 0.49615 -1.870829 0 -1.870829 
+C -0.49615 -1.870829 -0.972045 -1.673706 -1.322876 -1.322876 
+C -1.673706 -0.972045 -1.870829 -0.49615 -1.870829 0 
+C -1.870829 0.49615 -1.673706 0.972045 -1.322876 1.322876 
+C -0.972045 1.673706 -0.49615 1.870829 0 1.870829 
+z
+" style="stroke: #ffffff; stroke-width: 0.4"/>
+    </defs>
+    <g clip-path="url(#kp-p9b76541a89)">
+     <use xlink:href="#kp-mec15ebe9c1" x="72.667019" y="90.32794" style="fill: #5b8fb9; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-mec15ebe9c1" x="48.998174" y="104.428528" style="fill: #5b8fb9; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-mec15ebe9c1" x="128.062189" y="90.32794" style="fill: #5b8fb9; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-mec15ebe9c1" x="151.731034" y="104.428528" style="fill: #5b8fb9; stroke: #ffffff; stroke-width: 0.4"/>
+    </g>
+   </g>
+   <g id="kp-PathCollection_3">
+    <defs>
+     <path id="kp-m5b7e223d54" d="M -0 3 
+L 3 0 
+L 0 -3 
+L -3 -0 
+z
+" style="stroke: #ffffff; stroke-width: 0.5"/>
+    </defs>
+    <g clip-path="url(#kp-p9b76541a89)">
+     <use xlink:href="#kp-m5b7e223d54" x="72.667019" y="149.751849" style="fill: #d9a65a; stroke: #ffffff; stroke-width: 0.5"/>
+     <use xlink:href="#kp-m5b7e223d54" x="128.062189" y="149.751849" style="fill: #d9a65a; stroke: #ffffff; stroke-width: 0.5"/>
+    </g>
+   </g>
+   <g id="kp-PathCollection_4">
+    <defs>
+     <path id="kp-m84e9eeca81" d="M 0 1.870829 
+C 0.49615 1.870829 0.972045 1.673706 1.322876 1.322876 
+C 1.673706 0.972045 1.870829 0.49615 1.870829 0 
+C 1.870829 -0.49615 1.673706 -0.972045 1.322876 -1.322876 
+C 0.972045 -1.673706 0.49615 -1.870829 0 -1.870829 
+C -0.49615 -1.870829 -0.972045 -1.673706 -1.322876 -1.322876 
+C -1.673706 -0.972045 -1.870829 -0.49615 -1.870829 0 
+C -1.870829 0.49615 -1.673706 0.972045 -1.322876 1.322876 
+C -0.972045 1.673706 -0.49615 1.870829 0 1.870829 
+z
+" style="stroke: #ffffff; stroke-width: 0.4"/>
+    </defs>
+    <g clip-path="url(#kp-p9b76541a89)">
+     <use xlink:href="#kp-m84e9eeca81" x="58.062838" y="195.07517" style="fill: #7aae7b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m84e9eeca81" x="61.084393" y="210.182943" style="fill: #7aae7b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m84e9eeca81" x="64.105947" y="225.290717" style="fill: #7aae7b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m84e9eeca81" x="142.66637" y="195.07517" style="fill: #7aae7b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m84e9eeca81" x="139.644815" y="210.182943" style="fill: #7aae7b; stroke: #ffffff; stroke-width: 0.4"/>
+     <use xlink:href="#kp-m84e9eeca81" x="136.623261" y="225.290717" style="fill: #7aae7b; stroke: #ffffff; stroke-width: 0.4"/>
+    </g>
+   </g>
+  </g>
+  <g id="kp-axes_2">
+   <g id="kp-patch_6">
+    <path d="M 222.117522 28.92672 
+L 228.174984 28.92672 
+L 228.174984 21.50784 
+L 222.117522 21.50784 
+z
+" clip-path="url(#kp-p56b4ecae84)" style="fill: #c66b6b"/>
+   </g>
+   <g id="kp-patch_7">
+    <path d="M 222.117522 116.36352 
+L 228.174984 116.36352 
+L 228.174984 108.94464 
+L 222.117522 108.94464 
+z
+" clip-path="url(#kp-p56b4ecae84)" style="fill: #5b8fb9"/>
+   </g>
+   <g id="kp-patch_8">
+    <path d="M 222.117522 180.48384 
+L 228.174984 180.48384 
+L 228.174984 173.06496 
+L 222.117522 173.06496 
+z
+" clip-path="url(#kp-p56b4ecae84)" style="fill: #d9a65a"/>
+   </g>
+   <g id="kp-patch_9">
+    <path d="M 222.117522 221.28768 
+L 228.174984 221.28768 
+L 228.174984 213.8688 
+L 222.117522 213.8688 
+z
+" clip-path="url(#kp-p56b4ecae84)" style="fill: #7aae7b"/>
+   </g>
+   <g id="kp-line2d_11">
+    <path d="M 224.044896 256.2624 
+L 237.261176 256.2624 
+" clip-path="url(#kp-p56b4ecae84)" style="fill: none; stroke-dasharray: 2.7,1.8; stroke-dashoffset: 0; stroke: #7e9f6a; stroke-width: 0.9"/>
+   </g>
+   <g id="kp-line2d_12">
+    <path d="M 224.044896 268.1856 
+L 237.261176 268.1856 
+" clip-path="url(#kp-p56b4ecae84)" style="fill: none; stroke: #d8a0b4; stroke-width: 1.1; stroke-linecap: square"/>
+   </g>
+   <g id="kp-text_13">
+    <text style="fill: #6b7280; font: italic 5.7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="220.740826" y="12.674222" transform="rotate(-0 220.740826 12.674222)">format: full name  (released abbreviation)</text>
+   </g>
+   <g id="kp-text_14">
+    <text style="fill: #1f2937; font: 700 7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="231.203715" y="26.76357" transform="rotate(-0 231.203715 26.76357)">Spine (12 points)</text>
+   </g>
+   <g id="kp-text_15">
+    <text style="fill: #1f2937; font: 6.2px 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Computer Modern Typewriter', 'Andale Mono', 'Nimbus Mono L', 'Courier New', 'Courier', 'Fixed', 'Terminal', monospace; text-anchor: start" x="233.131089" y="38.602801" transform="rotate(-0 233.131089 38.602801)">spin0  (s0)</text>
+   </g>
+   <g id="kp-text_16">
+    <text style="fill: #4b5563; font: italic 5.7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="233.131089" y="45.802673" transform="rotate(-0 233.131089 45.802673)">C7 = most prominent spinous process at neck flexion</text>
+   </g>
+   <g id="kp-text_17">
+    <text style="fill: #1f2937; font: 6.2px 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Computer Modern Typewriter', 'Andale Mono', 'Nimbus Mono L', 'Courier New', 'Courier', 'Fixed', 'Terminal', monospace; text-anchor: start" x="233.131089" y="61.919281" transform="rotate(-0 233.131089 61.919281)">spin1–spin7  (s1–s7)</text>
+   </g>
+   <g id="kp-text_18">
+    <text style="fill: #4b5563; font: italic 5.7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="233.131089" y="69.119153" transform="rotate(-0 233.131089 69.119153)">T1–T7 thoracic; T2/T3 at superior scapular line, T7 at inferior scapular line</text>
+   </g>
+   <g id="kp-text_19">
+    <text style="fill: #1f2937; font: 6.2px 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Computer Modern Typewriter', 'Andale Mono', 'Nimbus Mono L', 'Courier New', 'Courier', 'Fixed', 'Terminal', monospace; text-anchor: start" x="233.131089" y="85.235761" transform="rotate(-0 233.131089 85.235761)">spin8–spin11  (s8–s11)</text>
+   </g>
+   <g id="kp-text_20">
+    <text style="fill: #4b5563; font: italic 5.7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="233.131089" y="92.400899" transform="rotate(-0 233.131089 92.400899)">L1–L4 lumbar; L2 at costal arch, L4 at iliac crest</text>
+   </g>
+   <g id="kp-text_21">
+    <text style="fill: #1f2937; font: 700 7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="231.203715" y="114.20037" transform="rotate(-0 231.203715 114.20037)">Shoulder (4 points)</text>
+   </g>
+   <g id="kp-text_22">
+    <text style="fill: #1f2937; font: 6.2px 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Computer Modern Typewriter', 'Andale Mono', 'Nimbus Mono L', 'Courier New', 'Courier', 'Fixed', 'Terminal', monospace; text-anchor: start" x="233.131089" y="126.039601" transform="rotate(-0 233.131089 126.039601)">lshoulder0, rshoulder0  (ls0, rs0)</text>
+   </g>
+   <g id="kp-text_23">
+    <text style="fill: #4b5563; font: italic 5.7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="233.131089" y="133.204739" transform="rotate(-0 233.131089 133.204739)">inner shoulder near neck base, bilateral</text>
+   </g>
+   <g id="kp-text_24">
+    <text style="fill: #1f2937; font: 6.2px 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Computer Modern Typewriter', 'Andale Mono', 'Nimbus Mono L', 'Courier New', 'Courier', 'Fixed', 'Terminal', monospace; text-anchor: start" x="233.131089" y="149.356081" transform="rotate(-0 233.131089 149.356081)">lshoulder1, rshoulder1  (ls1, rs1)</text>
+   </g>
+   <g id="kp-text_25">
+    <text style="fill: #4b5563; font: italic 5.7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="233.131089" y="156.522555" transform="rotate(-0 233.131089 156.522555)">outer (acromial) shoulder, bilateral</text>
+   </g>
+   <g id="kp-text_26">
+    <text style="fill: #1f2937; font: 700 7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="231.203715" y="178.32069" transform="rotate(-0 231.203715 178.32069)">Scapula (2 points)</text>
+   </g>
+   <g id="kp-text_27">
+    <text style="fill: #1f2937; font: 6.2px 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Computer Modern Typewriter', 'Andale Mono', 'Nimbus Mono L', 'Courier New', 'Courier', 'Fixed', 'Terminal', monospace; text-anchor: start" x="233.131089" y="190.159921" transform="rotate(-0 233.131089 190.159921)">lblade0, rblade0  (lb0, rb0)</text>
+   </g>
+   <g id="kp-text_28">
+    <text style="fill: #4b5563; font: italic 5.7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="233.131089" y="197.326395" transform="rotate(-0 233.131089 197.326395)">inferior scapular angle, bilateral (T7 line)</text>
+   </g>
+   <g id="kp-text_29">
+    <text style="fill: #1f2937; font: 700 7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="231.203715" y="219.12453" transform="rotate(-0 231.203715 219.12453)">Waist (6 points)</text>
+   </g>
+   <g id="kp-text_30">
+    <text style="fill: #1f2937; font: 6.2px 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Computer Modern Typewriter', 'Andale Mono', 'Nimbus Mono L', 'Courier New', 'Courier', 'Fixed', 'Terminal', monospace; text-anchor: start" x="233.131089" y="230.963761" transform="rotate(-0 233.131089 230.963761)">lwaist0–2, rwaist0–2  (lw0–2, rw0–2)</text>
+   </g>
+   <g id="kp-text_31">
+    <text style="fill: #4b5563; font: italic 5.7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="233.131089" y="238.112423" transform="rotate(-0 233.131089 238.112423)">lateral waist contour at three heights between L1 and L5, bilateral</text>
+   </g>
+   <g id="kp-text_32">
+    <text style="fill: #6b7280; font: 5.7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="240.565247" y="257.737275" transform="rotate(-0 240.565247 257.737275)">anatomical reference lines (T2/T3, T7, L2, L4)</text>
+   </g>
+   <g id="kp-text_33">
+    <text style="fill: #6b7280; font: 5.7px 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: start" x="240.565247" y="269.693873" transform="rotate(-0 240.565247 269.693873)">lumbar belt upper / lower bounds</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="kp-p9b76541a89">
+   <rect x="7.2" y="21.335773" width="203.954944" height="236.688453"/>
+  </clipPath>
+  <clipPath id="kp-p56b4ecae84">
+   <rect x="220.740826" y="7.2" width="275.339174" height="264.96"/>
+  </clipPath>
+ </defs>
+</svg>
+    </figure>
+  </div>
+</section>
+
+<!-- BENCHMARK EXAMPLES -->
+<section id="examples">
+  <div class="wrap">
+    <div class="kicker">Benchmark suite</div>
+    <h2>Task examples: input → chain-of-thought → structured output</h2>
+    <p class="lead">Representative I/O from the released examples. Keypoint predictions are shown overlaid on the de-identified input frame; the six-dimensional diagnosis is shown field-by-field. Prompts and outputs are verbatim from the released <code>QA</code> files.</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-ex="b1">B1 · RGB → 2D keypoints</button>
+      <button class="tab" role="tab" aria-selected="false" data-ex="b2">B2 · RGB → diagnosis</button>
+      <button class="tab" role="tab" aria-selected="false" data-ex="b3">B3 · RGB+depth → diagnosis</button>
+    </div>
+
+    <!-- B1 -->
+    <div class="example active" id="ex-b1">
+      <div class="io">
+        <div>
+          <p class="panel-label">Input RGB (de-identified)</p>
+          <img class="eximg" src="assets/example/b1_2dkpt_raw.png" alt="De-identified posterior standing capture" loading="lazy">
+          <p class="capt">From the released <code>2d&nbsp;kpt/raw.png</code>. <b>Every pixel outside the patient’s body is mosaicked</b> — the whole room, including the height chart and the two institutional logos on it. The head and the hospital wristband are mosaicked as well, so only the trunk, limbs and posture the benchmark actually measures stay legible.</p>
+          <p class="panel-label" style="margin-top:14px">Kpts Prediction</p>
+          <img class="eximg" src="assets/example/b1_2dkpt_kpt.png" alt="Predicted 24 keypoints overlaid on the de-identified input frame" loading="lazy">
+          <p class="capt">The model’s 24 predicted keypoints drawn on the same de-identified frame; the JSON on the right is the verbatim output.</p>
+        </div>
+        <div>
+          <p class="panel-label">Prompt</p>
+          <div class="prompt"><span class="qk">Q:</span> Detect the bounding box of the patient’s back, then locate the 12 spine keypoints (s0–s11) plus shoulder (ls0,ls1,rs0,rs1), scapula (lb0,rb0) and waist (lw0–2,rw0–2) points. Output JSON.</div>
+          <details class="cot"><summary>▸ Chain-of-thought (excerpt)</summary><div class="cotbody">Patient identification: a person with the back facing the camera is the target. Spine keypoints s0–s11 are placed from the base of the neck downward, evenly spaced to reflect spinal curvature. Shoulders: top and acromion points bilaterally. Scapulae: inferior angles. Waist: contour top→bottom, bilateral. Non-visible points recorded as [0,0].</div></details>
+          <p class="panel-label" style="margin-top:14px">Output (24 keypoints + bbox)</p>
+          <pre class="json" id="json-b1"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- B2 -->
+    <div class="example" id="ex-b2">
+      <div class="io">
+        <div>
+          <p class="panel-label">Input RGB (de-identified)</p>
+          <img class="eximg" src="assets/example/b2_diag2dkpt_raw.png" alt="De-identified posterior standing capture used for the diagnosis example" loading="lazy">
+          <p class="capt">From the released <code>diagnosis&nbsp;+&nbsp;2d&nbsp;kpt/raw.png</code>. Everything outside the body is mosaicked, plus the head and the hospital wristband — which in the source prints name, sex, age and admission number.</p>
+          <p class="panel-label" style="margin-top:14px">Kpts Prediction</p>
+          <img class="eximg" src="assets/example/b2_diag2dkpt_kpt.png" alt="Chain-of-thought keypoints overlaid on the de-identified input frame" loading="lazy">
+          <p class="capt">The chain-of-thought keypoints drawn on the same de-identified frame (<code>diagnosis + 2d kpt/kpt.png</code>).</p>
+          <div class="note" style="margin-top:12px">The <b>2D-keypoint chain-of-thought</b> is emitted before the diagnosis, giving the model explicit anatomical grounding (and doubling as a Cobb-shape regulariser).</div>
+          <p class="panel-label" style="margin-top:18px">Second released example — RGB only, no keypoint CoT</p>
+          <img class="eximg" src="assets/example/b2_diag_raw.png" alt="De-identified posterior standing capture of a second subject" loading="lazy">
+          <p class="capt">The <code>diagnosis/</code> example goes straight from RGB to the six-dimensional diagnosis with no keypoint chain-of-thought; its verbatim prompt and output are in the released <code>diagnosis/QA.txt</code>. From <code>diagnosis/raw.png</code>, with the head and the whole surrounding scene mosaicked.</p>
+        </div>
+        <div>
+          <p class="panel-label">Prompt</p>
+          <div class="prompt"><span class="qk">Q:</span> Analyze the patient’s symptoms based on this image. Output the results in JSON.</div>
+          <p class="panel-label" style="margin-top:14px">Six-dimensional diagnosis (verbatim example)</p>
+          <div class="dx" id="dx-b2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B3 -->
+    <div class="example" id="ex-b3">
+      <div class="io">
+        <div>
+          <p class="panel-label">Input RGB + depth (de-identified)</p>
+          <img class="eximg" src="assets/example/b3_diag3dkpt_raw.png" alt="De-identified clinical RGB+depth capture, RGB view" loading="lazy">
+          <p class="capt">RGB view of the RGB+depth capture (<code>diagnosis&nbsp;+&nbsp;3d&nbsp;kpt/raw.png</code>). The patient’s head is out of frame by construction; the whole examination room behind — whiteboard, cabinetry, fittings — is mosaicked out.</p>
+          <p class="panel-label" style="margin-top:14px">Aligned depth map</p>
+          <img class="eximg" src="assets/example/b3_diag3dkpt_depth.png" alt="Aligned depth map for the RGB+depth capture" loading="lazy">
+          <p class="capt">The aligned depth channel released alongside the RGB frame (<code>diagnosis + 3d kpt/depth.png</code>), pixel-registered to the view above and colour-mapped for display. Only the patient’s torso returns a valid range; the flat background is the sensor’s far plane. Depth is anonymous by construction — no texture, face or printed identifier survives in it — and the same body mask is applied for consistency with the RGB view.</p>
+          <div class="duo" style="margin-top:14px">
+            <div><p class="panel-label">RGB</p><img class="eximg" src="assets/example/b3_diag3dkpt_raw.png" alt="RGB view, shown side by side with the depth map" loading="lazy"></div>
+            <div><p class="panel-label">Depth</p><img class="eximg" src="assets/example/b3_diag3dkpt_depth.png" alt="Aligned depth map, shown side by side with the RGB view" loading="lazy"></div>
+          </div>
+          <p class="capt">Side-by-side: the two channels the B3 model consumes.</p>
+          <p class="panel-label" style="margin-top:14px">Kpts Prediction</p>
+          <img class="eximg" src="assets/example/b3_diag3dkpt_kpt.png" alt="Predicted 3D keypoints overlaid on the de-identified RGB+depth capture" loading="lazy">
+          <p class="capt">The model’s 3D keypoints drawn on the same capture (<code>diagnosis + 3d kpt/kpt.png</code>).</p>
+          <div class="note" style="margin-top:12px">Depth (mm) is carried in the model’s explicit <b>3D-keypoint output</b> — the cleanest depth signal in our study comes from this explicit 3D-keypoint CoT rather than a dense point-cloud token stream.</div>
+          <p class="panel-label" style="margin-top:18px">Second released example — RGB+depth → 3D keypoints</p>
+          <div class="duo">
+            <div><img class="eximg" src="assets/example/b3_3dkpt_raw.png" alt="De-identified RGB+depth capture with a non-patient clinician in frame" loading="lazy"></div>
+            <div><img class="eximg" src="assets/example/b3_3dkpt_kpt.png" alt="Predicted 3D keypoints overlaid on that capture" loading="lazy"></div>
+          </div>
+          <p class="capt">The <code>3d kpt/</code> example — input on the left, the 24 predicted 3D keypoints on the right. Each point carries an <code>[x, y, depth]</code> triple with depth in millimetres; the verbatim output is in <code>3d&nbsp;kpt/QA.txt</code>. An attending clinician stands to the left of frame; they fall outside the patient’s body mask and are therefore mosaicked in full.</p>
+        </div>
+        <div>
+          <p class="panel-label">Prompt</p>
+          <div class="prompt"><span class="qk">Q:</span> Analyze the patient’s symptoms based on this image (with aligned depth). Output the results in JSON.</div>
+          <p class="panel-label" style="margin-top:14px">Six-dimensional diagnosis (verbatim example)</p>
+          <div class="dx" id="dx-b3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ETHICS -->
+<section id="ethics" style="background:linear-gradient(180deg,#fff,#f3f7f8);border-top:1px solid var(--line)">
+  <div class="wrap">
+    <div class="kicker">Privacy &amp; ethics</div>
+    <h2>De-identification &amp; controlled access</h2>
+    <p class="lead">SpineDiag involves pediatric medical imagery and is handled under a strict de-identification and controlled-access regime. Identifiable content — of the patient and of any incidental non-patient (guardian / clinician) — is removed before release.</p>
+    <div class="ethgrid">
+      <div class="eth"><h4>👤 Face de-identification</h4><p>Every released RGB frame is processed by an automatic face detector (YOLOv8l-face) followed by an elliptical mosaic on <b>all</b> detected faces — patient and any non-patient in frame — plus a manual verification pass.</p></div>
+      <div class="eth"><h4>🏷️ Identifier scrubbing</h4><p>DICOM headers are exhaustively scrubbed (PHI tags removed); burned-in PHI in pixel data is masked; site/location names are replaced with codes; free-text EHR is regex-redacted.</p></div>
+      <div class="eth"><h4>🔒 Controlled access</h4><p>The full RGB / X-ray-bearing corpus is released only under a click-through Data-Use Agreement. A de-identified mini-sample supports quick inspection without raw back-RGB.</p></div>
+      <div class="eth"><h4>📋 IRB &amp; consent</h4><p>Approved by the host institution’s ethics committee (approval 2026PHB049-001). Written informed consent from both guardian and minor, with explicit anonymized-release and DUA-reuse clauses.</p></div>
+    </div>
+    <h3 style="font-size:17px;margin:26px 0 2px">De-identification examples</h3>
+    <p style="color:var(--muted);margin:0 0 4px;font-size:14px">Released frames after the de-identification pipeline. Only the patient’s body — the sole region the benchmark measures — is kept at full resolution; <b>every pixel outside it is mosaicked</b>, together with the head. Backgrounds, printed identifiers, institutional signage and non-patient individuals are removed as a class rather than case by case.</p>
+    <div class="gallery">
+      <div class="gcard"><img src="assets/example/b1_2dkpt_raw.png" alt="De-identified standardised capture" loading="lazy"><div class="cap"><b>Body-only release.</b> Head mosaicked and the entire room removed — the height chart carrying two institutional logos falls inside the mosaicked region.</div></div>
+      <div class="gcard"><img src="assets/example/b2_diag2dkpt_raw.png" alt="De-identified clinical capture" loading="lazy"><div class="cap"><b>Printed identifiers.</b> The hospital wristband prints name, sex, age and admission number; it is mosaicked along with the head, and the surrounding scene wholesale.</div></div>
+      <div class="gcard"><img src="assets/example/b3_3dkpt_raw.png" alt="De-identified RGB+depth capture with a non-patient in frame" loading="lazy"><div class="cap"><b>Non-patient in frame.</b> The attending clinician lies outside the patient’s body mask and is mosaicked in full, as is the rest of the examination room.</div></div>
+    </div>
+    <div class="note" style="margin-top:16px"><b>Note.</b> These previews are auto-processed for this page; the released corpus uses the project’s YOLOv8l-face + elliptical-mosaic pipeline with a manual verification pass. Full-resolution RGB is available only under the controlled-access DUA.</div>
+  </div>
+</section>
+
+<!-- SOURCE STATISTICS (verbatim acquisition-record tables) -->
+<section id="stats" style="background:linear-gradient(180deg,#f3f7f8,#fff);border-top:1px solid var(--line)">
+  <div class="wrap">
+    <div class="kicker">Source statistics</div>
+    <h2>Acquisition-record tables</h2>
+    <p class="lead">Reproduced as recorded, without edits or added totals.</p>
+
+    <div class="grid3">
+
+      <div class="card">
+        <div class="hd"><span class="dot" style="background:var(--brand)"></span>Cobb severity distribution</div>
+        <div class="bd" style="padding:6px 4px">
+          <table>
+            <thead><tr><th>angle</th><th>type</th><th class="num">number</th></tr></thead>
+            <tbody>
+              <tr><td>&lt;&nbsp;10°</td><td>very mild</td><td class="num">29</td></tr>
+              <tr><td>10°–20°</td><td>mild</td><td class="num">35</td></tr>
+              <tr><td>20°–40°</td><td>moderate</td><td class="num">35</td></tr>
+              <tr><td>&gt;&nbsp;40°</td><td>severe</td><td class="num">34</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hd"><span class="dot" style="background:#c8862a"></span>Acquisition source</div>
+        <div class="bd" style="padding:6px 4px">
+          <table>
+            <tbody>
+              <tr><td>Free clinic</td><td class="num">62</td></tr>
+              <tr><td>Hospital</td><td class="num">107</td></tr>
+            </tbody>
+          </table>
+          <p class="srcnote">Outreach free-clinic sessions are recorded as “Free clinic”; all others as “Hospital”.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hd"><span class="dot" style="background:#2f7d8a"></span>People per modality</div>
+        <div class="bd" style="padding:6px 4px">
+          <table>
+            <tbody>
+              <tr><td>RGB image</td><td class="num">156</td></tr>
+              <tr><td>RGB video</td><td class="num">62</td></tr>
+              <tr><td>Depth image</td><td class="num">62</td></tr>
+              <tr><td>Depth video</td><td class="num">62</td></tr>
+              <tr><td>X-ray</td><td class="num">35</td></tr>
+              <tr><td>CT</td><td class="num">34</td></tr>
+              <tr><td>Diagnosis</td><td class="num">133</td></tr>
+            </tbody>
+          </table>
+          <p class="srcnote">Each number is the total count of people who have data in that modality. Four MKV video recordings carry no annotation and are not used.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>SpineDiag · Multimodal Clinical Dataset for Radiation-Free AIS Assessment</div>
+    <div><a href="https://github.com/SpineDiag/SpineDiag.github.io" target="_blank" rel="noopener">github.com/SpineDiag/SpineDiag.github.io</a></div>
+  </div>
+</footer>
+
+<script>
+// ---- Real released keypoint coordinates (from QA files) ----
+const KP_B1 = {bbox:[326,181,644,721],
+  s0:[491,309],s1:[491,322],s2:[491,339],s3:[492,355],s4:[491,372],s5:[489,390],s6:[488,404],s7:[488,419],s8:[490,433],s9:[494,448],s10:[492,463],s11:[488,478],
+  ls0:[422,320],ls1:[392,330],rs0:[552,326],rs1:[588,339],lb0:[452,380],rb0:[543,391],
+  lw0:[427,437],lw1:[427,449],lw2:[423,462],rw0:[556,443],rw1:[557,458],rw2:[557,472]};
+const SPINE=['s0','s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11'];
+
+// JSON pretty (compact) for B1
+function kpJSON(kp){
+  let lines=['['];
+  lines.push(`  {"bbox_2d": [${kp.bbox.join(', ')}], "label": "bbox"},`);
+  const order=[...SPINE,'ls0','ls1','rs0','rs1','lb0','rb0','lw0','lw1','lw2','rw0','rw1','rw2'];
+  order.forEach((l,i)=>{ if(kp[l]) lines.push(`  {"point_2d": [${kp[l][0]}, ${kp[l][1]}], "label": "${l}"}${i<order.length-1?',':''}`);});
+  lines.push(']');
+  return lines.join('\n').replace(/"(bbox_2d|point_2d|label|bbox|s\d+|[lr][sbw]\d)"/g,'<span class="jk">"$1"</span>');
+}
+document.getElementById('json-b1').innerHTML=kpJSON(KP_B1);
+
+// diagnosis fields
+const DX_B2={"Overall Condition":"Scoliosis","Spinal Curvature":"Thoracolumbar curve — right thoracic curve, left lumbar curve","Shoulders":"Both shoulders are level.","Back":"No obvious prominence on the back.","Scapulae":"No prominent scapular projection.","Other Symptoms":"No other symptoms."};
+const DX_B3={"Overall Condition":"Scoliosis","Spinal Curvature":"Main curve in the thoracic region — right thoracic scoliosis.","Shoulders":"Both shoulders are level.","Back":"Equal height on the back.","Scapulae":"Right scapula higher than left; left scapula prominent.","Other Symptoms":"No other symptoms."};
+function fillDx(id,dx){ const el=document.getElementById(id); el.innerHTML=Object.entries(dx).map(([k,v])=>`<div class="dxi"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');}
+fillDx('dx-b2',DX_B2); fillDx('dx-b3',DX_B3);
+
+
+// tabs
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected','false'));
+  t.setAttribute('aria-selected','true');
+  document.querySelectorAll('.example').forEach(e=>e.classList.remove('active'));
+  document.getElementById('ex-'+t.dataset.ex).classList.add('active');
+}));
+</script>
+<script>
+/* Per-subject modality matrix: read assets/summary.xlsx in the browser.
+   Two rules are enforced on the way in, regardless of what the workbook holds:
+   (1) column A (the internal record id) is never rendered - the subject label is
+       S001..Snnn derived from row position;
+   (2) no CJK reaches the page - known present/absent tokens map to the glyphs below,
+       anything else is stripped of CJK before it is printed. */
+(function(){
+  var YES='\u2713', NO='\u00b7';
+  var MAP={};
+  ['\u6709','\u662f','y','yes','true','1',YES].forEach(function(k){MAP[k]=YES;});
+  ['\u65e0','\u5426','n','no','false','0','',NO].forEach(function(k){MAP[k]=NO;});
+  var CJK=/[\u2e80-\u9fff\u3000-\u303f\uff00-\uffef]/g;
+  function esc(t){return String(t).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function strip(t){return String(t==null?'':t).replace(CJK,'').trim();}
+  function isBool(v){
+    var k=String(v==null?'':v).trim();
+    return Object.prototype.hasOwnProperty.call(MAP,k.toLowerCase()) ||
+           Object.prototype.hasOwnProperty.call(MAP,k);
+  }
+  function glyph(v){
+    var k=String(v==null?'':v).trim();
+    if(Object.prototype.hasOwnProperty.call(MAP,k.toLowerCase())) return MAP[k.toLowerCase()];
+    if(Object.prototype.hasOwnProperty.call(MAP,k)) return MAP[k];
+    return null;
+  }
+  function say(html,warn){
+    var el=document.getElementById('mx-status');
+    if(!el) return;
+    el.innerHTML=html;
+    el.style.color = warn ? '#a3512f' : '';
+  }
+  function render(rows){
+    var hdr=rows[0]||[], i, r, c;
+    var body=rows.slice(1).filter(function(x){
+      return x && x.some(function(v){return v!=null && String(v).trim()!=='';});});
+    /* trailing spreadsheet columns carrying neither a header nor any value are dropped */
+    var n=0;
+    for(i=0;i<hdr.length;i++) if(strip(hdr[i])!=='') n=i+1;
+    for(r=0;r<body.length;r++)
+      for(c=0;c<body[r].length;c++)
+        if(String(body[r][c]==null?'':body[r][c]).trim()!=='' && c+1>n) n=c+1;
+    /* every column is classified from its own values: a column whose filled cells are
+       all present/absent tokens renders as glyphs, any other column renders as text */
+    var bin=[], nb=0, nc=0;
+    for(c=1;c<n;c++){
+      var seen=false, all=true;
+      for(r=0;r<body.length;r++){
+        var v=String(body[r][c]==null?'':body[r][c]).trim();
+        if(v==='') continue;
+        seen=true;
+        if(!isBool(v)){all=false;break;}
+      }
+      bin[c]=seen&&all;
+      if(bin[c]) nb++; else nc++;
+    }
+    var th='<th>subject</th>';
+    for(i=1;i<n;i++){
+      var h=strip(hdr[i]); if(!h) h='col '+(i+1);
+      th+='<th class="'+(bin[i]?'ck':'tx')+'">'+esc(h)+'</th>';
+    }
+    var odd=0, out='';
+    for(r=0;r<body.length;r++){
+      var tr='<tr><td class="sid">S'+('00'+(r+1)).slice(-3)+'</td>';
+      for(c=1;c<n;c++){
+        var raw=body[r][c];
+        if(bin[c]){
+          var g=glyph(raw);
+          if(g==null){ g=esc(strip(raw))||NO; odd++; }
+          tr+='<td class="ck">'+g+'</td>';
+        }else{
+          tr+='<td class="tx">'+(esc(strip(raw))||'&mdash;')+'</td>';
+        }
+      }
+      out+=tr+'</tr>';
+    }
+    document.getElementById('mx-head').innerHTML=th;
+    document.getElementById('mx-body').innerHTML=out;
+    var cnt=document.getElementById('mx-count');
+    if(cnt) cnt.innerHTML='&nbsp;\u00b7 '+body.length+' subjects';
+    say('Read live from <code>assets/summary.xlsx</code> \u2014 '+body.length+' subjects \u00d7 '+
+        Math.max(0,n-1)+' columns ('+nb+' present/absent, '+nc+' categorical), parsed in the '+
+        'browser at page load.'+
+        (odd?' <b>'+odd+' cell(s) in a present/absent column held an unexpected value and were '+
+             'passed through verbatim.</b>':''), odd>0);
+  }
+  /* ---- self-contained .xlsx reader: ZIP central directory + DecompressionStream ----
+     No external library is loaded, so the page has no runtime dependency on a CDN. */
+  function u16(d,o){return d[o]|d[o+1]<<8;}
+  function u32(d,o){return (d[o]|d[o+1]<<8|d[o+2]<<16|d[o+3]<<24)>>>0;}
+  function inflate(bytes,meth){
+    if(meth===0) return Promise.resolve(bytes);
+    if(meth!==8) return Promise.reject(new Error('unsupported ZIP compression method '+meth));
+    if(typeof DecompressionStream!=='function')
+      return Promise.reject(new Error('this browser cannot decompress the workbook'));
+    var ds=new DecompressionStream('deflate-raw'), w=ds.writable.getWriter();
+    w.write(bytes); w.close();
+    return new Response(ds.readable).arrayBuffer().then(function(b){return new Uint8Array(b);});
+  }
+  function zipIndex(buf){
+    var d=new Uint8Array(buf), eocd=-1, lo=Math.max(0,d.length-66000);
+    for(var i=d.length-22;i>=lo;i--){ if(u32(d,i)===0x06054b50){eocd=i;break;} }
+    if(eocd<0) throw new Error('this file is not a valid .xlsx container');
+    var n=u16(d,eocd+10), p=u32(d,eocd+16), dec=new TextDecoder(), map={};
+    for(var k=0;k<n && p+46<=d.length;k++){
+      if(u32(d,p)!==0x02014b50) break;
+      var meth=u16(d,p+10), csz=u32(d,p+20),
+          nl=u16(d,p+28), el=u16(d,p+30), cl=u16(d,p+32), lho=u32(d,p+42);
+      map[dec.decode(d.subarray(p+46,p+46+nl))]={meth:meth,csz:csz,lho:lho};
+      p+=46+nl+el+cl;
+    }
+    return {d:d,map:map};
+  }
+  function zipRead(z,name){
+    var e=z.map[name]; if(!e) return Promise.resolve(null);
+    var d=z.d, lho=e.lho;
+    if(u32(d,lho)!==0x04034b50) return Promise.reject(new Error('damaged entry: '+name));
+    var st=lho+30+u16(d,lho+26)+u16(d,lho+28);
+    return inflate(d.subarray(st,st+e.csz),e.meth).then(function(b){
+      return new TextDecoder().decode(b);});
+  }
+  function xml(t){
+    var doc=new DOMParser().parseFromString(t,'application/xml');
+    if(doc.getElementsByTagName('parsererror').length) throw new Error('malformed XML inside the workbook');
+    return doc;
+  }
+  function textOf(el){                       /* join every <t>, skipping phonetic <rPh> */
+    var ts=el.getElementsByTagName('t'), out='';
+    for(var i=0;i<ts.length;i++){
+      var par=ts[i].parentNode;
+      if(par && par.nodeName==='rPh') continue;
+      out+=ts[i].textContent;
+    }
+    return out;
+  }
+  function colIndex(ref){
+    var n=0;
+    for(var i=0;i<ref.length;i++){
+      var c=ref.charCodeAt(i);
+      if(c>=65&&c<=90) n=n*26+(c-64);
+      else if(c>=97&&c<=122) n=n*26+(c-96);
+      else break;
+    }
+    return n-1;
+  }
+  function sheetPath(z,wbTxt,relTxt){
+    try{
+      var sh=xml(wbTxt).getElementsByTagName('sheet')[0];
+      var rid=sh&&(sh.getAttribute('r:id')||sh.getAttributeNS(
+        'http://schemas.openxmlformats.org/officeDocument/2006/relationships','id'));
+      if(rid&&relTxt){
+        var rs=xml(relTxt).getElementsByTagName('Relationship');
+        for(var i=0;i<rs.length;i++) if(rs[i].getAttribute('Id')===rid)
+          return 'xl/'+String(rs[i].getAttribute('Target')||'').replace(/^\//,'').replace(/^xl\//,'');
+      }
+    }catch(e){}
+    var k=Object.keys(z.map).filter(function(x){
+      return /^xl\/worksheets\/sheet\d+\.xml$/.test(x);}).sort();
+    return k[0]||'xl/worksheets/sheet1.xml';
+  }
+  function parseSheet(txt,sst){
+    var rowEls=xml(txt).getElementsByTagName('row'), out=[];
+    for(var i=0;i<rowEls.length;i++){
+      var cs=rowEls[i].getElementsByTagName('c'), row=[];
+      for(var j=0;j<cs.length;j++){
+        var c=cs[j], t=c.getAttribute('t')||'n', ref=c.getAttribute('r')||'',
+            idx=ref?colIndex(ref):j, v='', e;
+        if(idx<0) idx=j;
+        if(t==='s'){
+          e=c.getElementsByTagName('v')[0];
+          if(e){ var q=parseInt(e.textContent,10); v=(sst[q]!=null?sst[q]:''); }
+        } else if(t==='inlineStr'){
+          e=c.getElementsByTagName('is')[0]; v=e?textOf(e):'';
+        } else {
+          e=c.getElementsByTagName('v')[0]; v=e?e.textContent:'';
+        }
+        row[idx]=v;
+      }
+      for(var z2=0;z2<row.length;z2++) if(row[z2]==null) row[z2]='';
+      out.push(row);
+    }
+    return out;
+  }
+  function fromBuffer(buf){
+    var z=zipIndex(buf);
+    return Promise.all([
+      zipRead(z,'xl/sharedStrings.xml'),
+      zipRead(z,'xl/workbook.xml'),
+      zipRead(z,'xl/_rels/workbook.xml.rels')
+    ]).then(function(parts){
+      var sst=[];
+      if(parts[0]){
+        var si=xml(parts[0]).getElementsByTagName('si');
+        for(var i=0;i<si.length;i++) sst.push(textOf(si[i]));
+      }
+      return zipRead(z,sheetPath(z,parts[1]||'',parts[2]||'')).then(function(sx){
+        if(!sx) throw new Error('no worksheet found inside the workbook');
+        var rows=parseSheet(sx,sst);
+        if(!rows.length) throw new Error('the first worksheet is empty');
+        render(rows);
+      });
+    });
+  }
+  function offerLocalFile(){
+    var host=document.getElementById('mx-local'), fi=document.getElementById('mx-file');
+    if(!host||!fi) return;
+    host.style.display='';
+    if(fi.getAttribute('data-wired')) return;
+    fi.setAttribute('data-wired','1');
+    fi.addEventListener('change',function(){
+      var f=this.files&&this.files[0];
+      if(!f) return;
+      var fr=new FileReader();
+      fr.onload=function(){
+        fromBuffer(fr.result).then(function(){
+          say('Rendered from <code>'+esc(f.name)+'</code> on this computer, parsed in the browser '+
+              '\u2014 nothing was uploaded. Reload the page to return to the built-in snapshot.',false);
+        }).catch(function(e){ say('That file could not be read: '+esc(e.message),true); });
+      };
+      fr.onerror=function(){ say('That file could not be read.',true); };
+      fr.readAsArrayBuffer(f);
+    });
+  }
+  function load(){
+    fetch('assets/summary.xlsx?v='+Date.now(),{cache:'no-store'}).then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.arrayBuffer();
+    }).then(fromBuffer).catch(function(e){
+      say('Showing the snapshot of <code>assets/summary.xlsx</code> built into this page &mdash; '+
+          esc(e.message)+'. A browser is not allowed to read a local file this way; serve the '+
+          'folder over HTTP (GitHub Pages, or <code>python3 -m http.server</code>) and the '+
+          'workbook is parsed live instead.', false);
+      offerLocalFile();
+    });
+  }
+  load();
+})();
+</script>
+</body>
+</html>

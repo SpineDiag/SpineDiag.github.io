@@ -1,0 +1,12 @@
+# macOS / editor cruft
+.DS_Store
+**/.DS_Store
+
+# VS Code Local History: keeps full snapshots of earlier drafts of index.html,
+# including versions with base64-embedded images. Must never be published.
+.history/
+
+# Source workbook carrying real patient names in column A.
+# The published assets/summary.xlsx is the de-identified copy (subject = S001..S139).
+summary_with_names.xlsx
+*_with_names.xlsx
