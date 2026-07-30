@@ -150,7 +150,6 @@
 
 <header class="hero">
   <div class="wrap hero-inner">
-    <span class="eyebrow">NeurIPS 2026 · Datasets &amp; Benchmarks</span>
     <h1>SpineDiag: Multimodal Clinical Dataset &amp; Evaluation<br>for Radiation-Free Scoliosis Assessment</h1>
     <p class="sub">The first per-subject multimodal-paired clinical dataset for Adolescent Idiopathic Scoliosis (AIS) — pairing radiation-free surface modalities (RGB, multi-view video, depth, point cloud, 24-point keypoints) with the X-ray-derived clinical Cobb angle and a six-dimensional physician-confirmed diagnosis.</p>
     <div class="btns">
@@ -158,7 +157,6 @@
       <a class="btn" href="https://github.com/SpineDiag/SpineDiag.github.io" target="_blank" rel="noopener">◧ Project repo</a>
       <a class="btn" href="#examples">Benchmark examples</a>
       <a class="btn" href="#ethics">De-identification &amp; ethics</a>
-      <a class="btn" href="#stats">Source statistics</a>
     </div>
     <div class="badges">
       <span class="badge"><b>133</b> subjects</span>
@@ -375,12 +373,10 @@
 </tbody>
           </table>
         </div>
-        <p class="srcnote">✓ = present, · = absent; the two right-hand columns hold categorical values and are reproduced verbatim. This table is read directly from <code>assets/summary.xlsx</code> in the browser at page load, so it always reflects the current workbook. The released workbook carries no patient-identifying field: its first column is an internal record identifier which the page never renders, and the subject label <code>S001</code>&ndash;<code>S133</code> shown here is re-derived from row position. Every other cell is reproduced as it stands in the sheet.</p>
-        <p class="srcnote" id="mx-status" style="margin-top:0">Reading <code>assets/summary.xlsx</code>&hellip;</p>
-        <p class="srcnote" id="mx-local" style="margin-top:6px;display:none">Preview a workbook from this computer instead: <input type="file" id="mx-file" accept=".xlsx" style="font:inherit;font-size:12px"> <span style="color:var(--muted)">&mdash; parsed in your browser, nothing is uploaded.</span></p>
+        <p class="srcnote">✓ = present, · = absent</p>
       </div>
     </div>
-    <div class="note">Numbers follow the released split (paper Table&nbsp;1) and the 133-subject benchmark cohort. Continued multi-centre enrolment is ongoing.</div>
+    <!-- <div class="note">Numbers follow the released split (paper Table&nbsp;1) and the 133-subject benchmark cohort. Continued multi-centre enrolment is ongoing.</div> -->
   </div>
 </section>
 
@@ -389,7 +385,7 @@
   <div class="wrap">
     <div class="kicker">Annotation Protocol</div>
     <h2>The 24-point anatomical keypoint protocol</h2>
-    <p class="lead">Twelve spinal landmarks (cranial reference + T1–T7 + L1–L4) anchored to palpable reference lines, plus bilateral shoulder, scapular, and waist points. Anchoring to externally palpable anatomy (rather than imaged vertebrae) makes the protocol reproducible without X-ray. The figure below is the released protocol specification, showing every landmark against the palpable reference line it is anchored to — <b>no subject photograph is shown</b>.</p>
+    <p class="lead">Twelve spinal landmarks (cranial reference + T1–T7 + L1–L4) anchored to palpable reference lines, plus bilateral shoulder, scapular, and waist points. Anchoring to externally palpable anatomy (rather than imaged vertebrae) makes the protocol reproducible without X-ray. The figure below is the released protocol specification.</p>
     <figure class="protofig">
 <svg id="kp-protocol-fig" viewBox="0 0 503.28 279.36" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="SpineDiag 24-point keypoint protocol: 12 spine, 4 shoulder, 2 scapula and 6 waist landmarks on a posterior view, with the anatomical reference lines they are anchored to" style="display:block;width:100%;height:auto" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
  <defs>
@@ -771,7 +767,7 @@ L 237.261176 268.1856
   <div class="wrap">
     <div class="kicker">Benchmark suite</div>
     <h2>Task examples: input → chain-of-thought → structured output</h2>
-    <p class="lead">Representative I/O from the released examples. Keypoint predictions are shown overlaid on the de-identified input frame; the six-dimensional diagnosis is shown field-by-field. Prompts and outputs are verbatim from the released <code>QA</code> files.</p>
+    <!-- <p class="lead">Representative I/O from the released examples. Keypoint predictions are shown overlaid on the de-identified input frame; the six-dimensional diagnosis is shown field-by-field. Prompts and outputs are verbatim from the released <code>QA</code> files.</p> -->
 
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" aria-selected="true" data-ex="b1">B1 · RGB → 2D keypoints</button>
@@ -884,65 +880,6 @@ L 237.261176 268.1856
   </div>
 </section>
 
-<!-- SOURCE STATISTICS (verbatim acquisition-record tables) -->
-<section id="stats" style="background:linear-gradient(180deg,#f3f7f8,#fff);border-top:1px solid var(--line)">
-  <div class="wrap">
-    <div class="kicker">Source statistics</div>
-    <h2>Acquisition-record tables</h2>
-    <p class="lead">Reproduced as recorded, without edits or added totals.</p>
-
-    <div class="grid3">
-
-      <div class="card">
-        <div class="hd"><span class="dot" style="background:var(--brand)"></span>Cobb severity distribution</div>
-        <div class="bd" style="padding:6px 4px">
-          <table>
-            <thead><tr><th>angle</th><th>type</th><th class="num">number</th></tr></thead>
-            <tbody>
-              <tr><td>&lt;&nbsp;10°</td><td>very mild</td><td class="num">29</td></tr>
-              <tr><td>10°–20°</td><td>mild</td><td class="num">35</td></tr>
-              <tr><td>20°–40°</td><td>moderate</td><td class="num">35</td></tr>
-              <tr><td>&gt;&nbsp;40°</td><td>severe</td><td class="num">34</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="hd"><span class="dot" style="background:#c8862a"></span>Acquisition source</div>
-        <div class="bd" style="padding:6px 4px">
-          <table>
-            <tbody>
-              <tr><td>Free clinic</td><td class="num">62</td></tr>
-              <tr><td>Hospital</td><td class="num">107</td></tr>
-            </tbody>
-          </table>
-          <p class="srcnote">Outreach free-clinic sessions are recorded as “Free clinic”; all others as “Hospital”.</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="hd"><span class="dot" style="background:#2f7d8a"></span>People per modality</div>
-        <div class="bd" style="padding:6px 4px">
-          <table>
-            <tbody>
-              <tr><td>RGB image</td><td class="num">156</td></tr>
-              <tr><td>RGB video</td><td class="num">62</td></tr>
-              <tr><td>Depth image</td><td class="num">62</td></tr>
-              <tr><td>Depth video</td><td class="num">62</td></tr>
-              <tr><td>X-ray</td><td class="num">35</td></tr>
-              <tr><td>CT</td><td class="num">34</td></tr>
-              <tr><td>Diagnosis</td><td class="num">133</td></tr>
-            </tbody>
-          </table>
-          <p class="srcnote">Each number is the total count of people who have data in that modality. Four MKV video recordings carry no annotation and are not used.</p>
-        </div>
-      </div>
-
-    </div>
-
-  </div>
-</section>
 
 <footer>
   <div class="wrap">
